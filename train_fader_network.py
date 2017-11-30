@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from data import split_train_val_test, plot_samples
+from utils import split_train_val_test, plot_samples
 from models import EncoderDecoder, Discriminator
 from os import makedirs
 from os.path import basename, exists, join, splitext

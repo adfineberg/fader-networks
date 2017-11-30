@@ -60,10 +60,19 @@ def target_transform_binary():
     ])
 
 
+def create_partition():
+    frame = pd.read_csv(join('data', 'list_attr_celeba.txt'), delim_whitespace=True, usecols=['Smiling'])
+    shuffled_names = np.random.permutation(np.array(frame.index))
+    shuffled_names[40000:] = shuffled_names[40000:] + ',0'
+    shuffled_names[20000:40000] = shuffled_names[20000:40000] + ',1'
+    shuffled_names[:20000] = shuffled_names[:20000] + ',2'
+    np.savetxt('list_eval_partition.txt', shuffled_names, fmt="%s")
+
+
 def split_train_val_test(data_dir):
     df = pd.read_csv(
         join(data_dir, 'list_eval_partition.txt'),
-        delim_whitespace=True, header=None
+        header=None
     )
     filenames, labels = df.values[:, 0], df.values[:, 1]
 

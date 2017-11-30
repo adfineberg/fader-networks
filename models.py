@@ -112,3 +112,49 @@ class Discriminator(nn.Module):
         y_hat = self.sigmoid(self.fc2(z))
 
         return y_hat
+
+
+class AttributeClassifier(nn.Module):
+    def __init__(self, num_attr, use_cuda=True, gpu_id=0):
+        super(AttributeClassifier, self).__init__()
+        self.use_cuda = use_cuda
+        self.gpu_id = gpu_id
+        self.num_attr = num_attr
+        self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
+        self.lrelu = nn.LeakyReLU(negative_slope=0.2)
+        # in, out, kernel, stride, padding
+        k, s, p = (4, 4), (2, 2), (1, 1)
+        self.conv1 = nn.Conv2d(3, 16, k, s, p)
+        self.batch_norm1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 32, k, s, p)
+        self.batch_norm2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 64, k, s, p)
+        self.batch_norm3 = nn.BatchNorm2d(64)
+        self.conv4 = nn.Conv2d(64, 128, k, s, p)
+        self.batch_norm4 = nn.BatchNorm2d(128)
+        self.conv5 = nn.Conv2d(128, 256, k, s, p)
+        self.batch_norm5 = nn.BatchNorm2d(256)
+        self.conv6 = nn.Conv2d(256, 512, k, s, p)
+        self.batch_norm6 = nn.BatchNorm2d(512)
+        self.conv7 = nn.Conv2d(512, 512, k, s, p)
+        self.batch_norm7 = nn.BatchNorm2d(512)
+        self.fc1 = nn.Linear(512, num_attr)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.lrelu(self.batch_norm1(self.conv1(x)))
+        x = self.lrelu(self.batch_norm2(self.conv2(x)))
+        x = self.lrelu(self.batch_norm3(self.conv3(x)))
+        x = self.lrelu(self.batch_norm4(self.conv4(x)))
+        x = self.lrelu(self.batch_norm5(self.conv5(x)))
+        x = self.lrelu(self.batch_norm6(self.conv6(x)))
+        # latent representation, i.e., encoding of x
+        x = self.lrelu(self.batch_norm7(self.conv7(x)))
+        z = self.lrelu(self.batch_norm7(self.conv7(x)))
+
+        z = z.view(-1, 512)
+        y_hat = self.sigmoid(self.fc1(z))
+
+        return y_hat
+
