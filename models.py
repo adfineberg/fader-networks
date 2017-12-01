@@ -158,3 +158,39 @@ class AttributeClassifier(nn.Module):
 
         return y_hat
 
+
+class SmallAttributeClassifier(nn.Module):
+    def __init__(self, num_attr, use_cuda=True, gpu_id=0):
+        super(SmallAttributeClassifier, self).__init__()
+        self.use_cuda = use_cuda
+        self.gpu_id = gpu_id
+        self.num_attr = num_attr
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(2, 2)
+        self.drop = nn.Dropout(p=0.3)
+        self.lrelu = nn.LeakyReLU(negative_slope=0.2)
+        # in, out, kernel, stride, padding
+        self.conv1 = nn.Conv2d(3, 32, 4, 2, 1)
+        self.batch_norm1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, 4, 2, 1)
+        self.batch_norm2 = nn.BatchNorm2d(64)
+        self.conv3 = nn.Conv2d(64, 128, 4, 2, 1)
+        self.batch_norm3 = nn.BatchNorm2d(128)
+        self.fc1 = nn.Linear(32768, 512)
+        self.fc2 = nn.Linear(512, num_attr)
+
+        self.log_softmax = nn.LogSoftmax()
+
+    def forward(self, x):
+        x = self.drop(self.lrelu(self.batch_norm1(self.conv1(x))))
+        x = self.drop(self.lrelu(self.batch_norm2(self.conv2(x))))
+        x = self.drop(self.lrelu(self.batch_norm3(self.conv3(x))))
+
+        x = self.pool(x)
+        x = x.view(-1, 32768)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        y_hat = self.log_softmax(x)
+
+        return y_hat
+
