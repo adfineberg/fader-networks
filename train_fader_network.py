@@ -24,16 +24,20 @@ def train_fader_network():
 
     num_attr = train.attribute_names.shape[0]
     encoder_decoder = EncoderDecoder(num_attr, gpu_id=gpu_id)
-    discriminator   = Discriminator(num_attr)
+    discriminator = Discriminator(num_attr)
     if use_cuda:
         encoder_decoder.cuda(gpu_id)
         discriminator.cuda(gpu_id)
 
-    train_iter = DataLoader(train, batch_size=32, shuffle=True, num_workers=8)
-    valid_iter = DataLoader(valid, batch_size=32, shuffle=False, num_workers=8)
-    test_iter  = DataLoader(test, batch_size=32, shuffle=False, num_workers=8)
+    train_iter = DataLoader(train, batch_size=64, shuffle=True, num_workers=8)
+    valid_iter = DataLoader(valid, batch_size=64, shuffle=False, num_workers=8)
+    test_iter  = DataLoader(test, batch_size=64, shuffle=False, num_workers=8)
 
-    max_epochs = 1000
+    # train_iter = DataLoader(train, batch_size=32, shuffle=True, num_workers=8)
+    # valid_iter = DataLoader(valid, batch_size=32, shuffle=False, num_workers=8)
+    # test_iter  = DataLoader(test, batch_size=32, shuffle=False, num_workers=8)
+
+    max_epochs = 10
     lr, beta1 = 2e-3, 0.5
     adversarial_optimizer = optim.Adam(encoder_decoder.parameters(),
                                        lr=lr, betas=(beta1, 0.999))
@@ -42,7 +46,7 @@ def train_fader_network():
     mse_loss = nn.MSELoss(size_average=True)
     bce_loss = nn.BCELoss(size_average=True)
 
-    num_iters = 0
+    num_iters = 5
     lambda_e = np.linspace(0, 1e-4, 500000)
 
     try:
