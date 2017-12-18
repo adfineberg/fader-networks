@@ -19,7 +19,7 @@ def plot_samples(x, x_hat, fpaths):
         img = Image.fromarray(stacked.astype(np.uint8))
         img.save(fpaths[i])
 
-
+#444
 def input_transform(crop_size):
     return Compose([
         CenterCrop(crop_size),
