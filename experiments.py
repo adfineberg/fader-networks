@@ -8,7 +8,7 @@ from torch.autograd import Variable
 
 
 def experiments():
-    use_cuda = True
+    use_cuda = False
     num_attr = 39
     to_swap = 'Blond_Hair'
     #to_swap = '5_o_Clock_Shadow'

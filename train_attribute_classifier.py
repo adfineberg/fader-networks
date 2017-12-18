@@ -12,6 +12,7 @@ from utils import split_train_val_test
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
+    torch.save(state, 'classifier_check_point.network')
     # if is_best:
     #     shutil.copyfile(filename, 'model_best.pth.tar')
 
@@ -31,7 +32,7 @@ def load_checkpoint(filename='checkpoint.pth.tar', num_attr=1, use_cuda=True, gp
 
 def train_attribute_classifier():
     gpu_id = 1
-    use_cuda = False
+    use_cuda = True
     data_dir = 'data'
     attribute_classifier_fpath = join(data_dir, 'weights', 'attr_cls.params')
     print('Loading data')
@@ -45,7 +46,7 @@ def train_attribute_classifier():
     train_iter = DataLoader(train, batch_size=32, shuffle=True, num_workers=14)
     valid_iter = DataLoader(valid, batch_size=32, shuffle=False, num_workers=14)
 
-    max_epochs = 90
+    max_epochs = 1000
     lr, beta1 = 2e-3, 0.5
     optimizer = optim.Adam(attribute_classifier.parameters(),
                            lr=lr, betas=(beta1, 0.999))
