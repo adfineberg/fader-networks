@@ -16,8 +16,8 @@ class Dataset(data.Dataset):
         attr_vals = frame.filter(items=filenames_lookup, axis=0).as_matrix()
         
         self.image_filenames = [join(image_dir, x) for x in filenames]
-        attr_vals = np.vstack(fname_to_attr[fname] for fname in filenames)
-        self.attribute_names  = np.array(attr_names)
+        # attr_vals = np.vstack(fname_to_attr[fname] for fname in filenames)
+        self.attribute_names = np.array(attr_names)
         self.attribute_values = attr_vals
         self.input_transform = input_transform
         self.target_transform = target_transform

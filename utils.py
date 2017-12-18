@@ -97,4 +97,5 @@ def split_train_val_test(data_dir):
 
 
 if __name__ == '__main__':
+    create_partition()
     split_train_val_test('data')
