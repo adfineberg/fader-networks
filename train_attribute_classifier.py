@@ -16,6 +16,19 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     #     shutil.copyfile(filename, 'model_best.pth.tar')
 
 
+def load_checkpoint(filename='checkpoint.pth.tar', num_attr=1, use_cuda=True, gpu_id=0):
+    checkpoint = torch.load(filename)
+    attribute_classifier = SmallAttributeClassifier(num_attr, use_cuda=use_cuda, gpu_id=gpu_id)
+    attribute_classifier.load_state_dict(checkpoint['state_dict'])
+    attribute_classifier.eval()
+    # This part tests the validation
+    _, valid, _ = split_train_val_test('data')
+    valid_iter = DataLoader(valid, batch_size=32, shuffle=False, num_workers=14)
+    criterion = nn.BCELoss()
+    epoch = 1
+    validate_model(attribute_classifier, criterion, epoch, gpu_id, use_cuda, valid_iter)
+
+
 def train_attribute_classifier():
     gpu_id = 1
     use_cuda = False
