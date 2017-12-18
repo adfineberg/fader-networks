@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from utils import split_train_val_test, plot_samples
-from models import EncoderDecoder, Discriminator
+from models import EncoderDecoder, Discriminator, AttributeClassifier
 from os import makedirs
 from os.path import basename, exists, join, splitext
 from torch.utils.data import DataLoader
@@ -13,7 +13,8 @@ from torch.autograd import Variable
 
 def train_fader_network():
     gpu_id = 1
-    use_cuda = True
+    use_cuda = False
+    # use true instead
     data_dir = 'data'
     sample_every = 10
     test_dir = join(data_dir, 'test-samples')
@@ -31,14 +32,15 @@ def train_fader_network():
 
     train_iter = DataLoader(train, batch_size=64, shuffle=True, num_workers=8)
     valid_iter = DataLoader(valid, batch_size=64, shuffle=False, num_workers=8)
-    test_iter  = DataLoader(test, batch_size=64, shuffle=False, num_workers=8)
+    test_iter = DataLoader(test, batch_size=64, shuffle=False, num_workers=8)
 
     # train_iter = DataLoader(train, batch_size=32, shuffle=True, num_workers=8)
     # valid_iter = DataLoader(valid, batch_size=32, shuffle=False, num_workers=8)
     # test_iter  = DataLoader(test, batch_size=32, shuffle=False, num_workers=8)
 
-    max_epochs = 10
+    max_epochs = 1000
     lr, beta1 = 2e-3, 0.5
+
     adversarial_optimizer = optim.Adam(encoder_decoder.parameters(),
                                        lr=lr, betas=(beta1, 0.999))
     discriminator_optimizer = optim.Adam(discriminator.parameters(),
@@ -49,6 +51,9 @@ def train_fader_network():
     num_iters = 5
     lambda_e = np.linspace(0, 1e-4, 500000)
 
+    attribute_classifier = AttributeClassifier(num_attr, use_cuda=False)
+    # load classifier instead
+
     try:
         for epoch in range(1, max_epochs):
             encoder_decoder.train()
@@ -58,6 +63,12 @@ def train_fader_network():
                     x = x.cuda(gpu_id)
                     yb, yt = yb.cuda(gpu_id), yt.cuda(gpu_id)
                 x, yb, yt = Variable(x), Variable(yb), Variable(yt)
+
+                # changing yb and yt to be the output of the classifier
+                yt.data = attribute_classifier(x).data
+                yb.data[:, 0] = yt.data
+                yb.data[:, 1] = 1 - yt.data
+
                 #print yb.data.cpu().numpy().shape
                 #print yt.data.cpu().numpy().shape
                 adversarial_optimizer.zero_grad()
@@ -108,6 +119,9 @@ def train_fader_network():
                     x = x.cuda(gpu_id)
                     yb, yt = yb.cuda(gpu_id), yt.cuda(gpu_id)
                 x, yb, yt = Variable(x), Variable(yb), Variable(yt)
+                yt.data = attribute_classifier(x).data
+                yb.data[:, 0] = yt.data
+                yb.data[:, 1] = 1 - yt.data
                 z, x_hat = encoder_decoder(x, yb)
 
                 #plot_samples(x, x_hat, prefix='valid_%d_%d' % (
@@ -137,6 +151,11 @@ def train_fader_network():
                     if use_cuda:
                         x, yb = x.cuda(gpu_id), yb.cuda(gpu_id)
                     x, yb = Variable(x), Variable(yb)
+
+                    yt.data = attribute_classifier(x).data
+                    yb.data[:, 0] = yt.data
+                    yb.data[:, 1] = 1 - yt.data
+
                     _, x_hat = encoder_decoder(x, yb)
                     sample_dir = join(test_dir, '%s' % epoch, '%s' % to_swap)
                     if not exists(sample_dir):
@@ -156,3 +175,4 @@ def train_fader_network():
 
 if __name__ == '__main__':
     train_fader_network()
+# train_fader_network()
